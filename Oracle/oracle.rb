@@ -39,8 +39,6 @@ module BeerBot::Modules::Oracle
   # Create skeleton oracle conf file, enough for us to function.
   #
   # Returns instance of JsonDataFile with 'data' loaded into it.
-  # 
-  # Relies on self.datafile.
 
   def self.create_datafile! filepath,data=nil
     unless data then
