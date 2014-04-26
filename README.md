@@ -53,6 +53,9 @@ If the version of beerbot in the gem is no longer cutting it or if you're using 
 
 ## Recommendations
 
+Try to make any database or datafile (eg JsonDataFile) you use injectable, rather than relying on BeerBot::Config.module_data .
+This isn't perfect.  There is no protocol around the beerbot code injecting a conf into a module (maybe there should), so what you end up doing is having the *default behaviour* using BeerBot::Config.module_data and allowing this to be overridden by passing in an **alternative** filepath or mock data object.  You can then do overrides when testing.  See Oracle and Facts module for examples.
+
 If your module does something, write it without any reference to the beerbot module.  Make an API out of it or whatever.
 Then define your bot module to use that.
 This will allow you to inject in a mock implementation when testing.
