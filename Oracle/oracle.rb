@@ -83,15 +83,13 @@ module BeerBot::Modules::Oracle
       return nil
     end
 
-    if (items=self.extract_or_items(msg)) && /:/===msg
-      replyto = me ? from : to
-      items = items.map{|i| i.sub(/\?+$/,'')}
-      items = items.map{|i| i.sub(/^[^:]*:/,'')}
+    if (items=self.extract_or_items(msg)) && /:/===msg then
+      items = items.map{|i| i.sub(/\?+$/,'').sub(/^([^:]*:)?/,'') }
       return [to:replyto,msg:[
           "hmm, you should go with: #{items.sample}",
           "do: #{items.sample}",
           "I think, at the moment, you should be going with: #{items.sample}",
-          "You should do: #{items.sample} #{from}",
+          "You should do: #{items.sample}, #{from}",
           "#{items.sample} is the best option",
         ].sample]
     end
@@ -102,6 +100,8 @@ module BeerBot::Modules::Oracle
     playfortime = self.data['playfortime']
     selected = nil
     case msg
+    when /\S\s+or\s+\S/i
+      selected = playfortime
     when /what\s+about\s+/i
       selected = binaries
     when /\bwhere/i,
