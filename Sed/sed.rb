@@ -25,6 +25,16 @@ module BeerBot::Modules::Sed
       }
     }
   end
+
+  def self.help arr=[]
+    [
+      "Do: s/pattern/replacement/ => to edit your last line",
+      "Do: s/pattern/replacement/ nick => to edit your nick's last line",
+      "Use a different delimiter if you're using '/': s#pattern#...#",
+      "Flags: i,g  eg s/.../.../ig",
+    ]
+  end
+
   def self.hear msg,world:nil,from:nil,to:nil,me:false
     replyto = me ? from : to
     replies = []
