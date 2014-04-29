@@ -13,4 +13,12 @@ describe "Oracle module" do
     replies.size.should == 1
     replies[0][:msg].class.should == String
   end
+
+  describe "or-regex" do
+    it "should match multiple or-values" do
+      Oracle.extract_or_items("A or B or C").should == ['A','B','C']
+      Oracle.extract_or_items("A").should == nil
+      Oracle.extract_or_items("A or").should == nil
+    end
+  end
 end

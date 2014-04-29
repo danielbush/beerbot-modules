@@ -60,11 +60,42 @@ module BeerBot::Modules::Oracle
     @data.data
   end
 
+  # Return nil or array of things between 'or'.
+  #
+  # eg "A or B or C ..." => ['A','B',...]
+
+  def self.extract_or_items str
+    # We can't use captures in a regex, they don't repeat.
+    #case str
+    #when /^\s*(\S+)(?:\s+or\s+(\S+))+\s*$/i
+      #str.strip.split(/\s+or\s+/i)
+    #else
+      #nil
+    #end
+    result = str.strip.split(/\s+or\s+/i)
+    return nil if result.size <= 1
+    return result
+  end
+
   def self.hear msg,to:nil,from:nil,me:false,world:nil
     replyto = me ? from : to
     unless /\?{2,}\s*$/i === msg
       return nil
     end
+
+    if (items=self.extract_or_items(msg)) && /:/===msg
+      replyto = me ? from : to
+      items = items.map{|i| i.sub(/\?+$/,'')}
+      items = items.map{|i| i.sub(/^[^:]*:/,'')}
+      return [to:replyto,msg:[
+          "hmm, you should go with: #{items.sample}",
+          "do: #{items.sample}",
+          "I think, at the moment, you should be going with: #{items.sample}",
+          "You should do: #{items.sample} #{from}",
+          "#{items.sample} is the best option",
+        ].sample]
+    end
+
     # Answers that tend towards yes/no/in-between type answers.
     binaries = self.data['yesnomaybe']
     # Answers that try to deal with non-binary type questions.
@@ -94,11 +125,16 @@ module BeerBot::Modules::Oracle
   # Assumes: msg has "beerbot: " stripped out via the dispatcher.
 
   def self.cmd msg,from:nil,to:nil,me:false,world:nil
-    self.hear msg,from:from,to:to,world:world
+    
+      self.hear msg,from:from,to:to,world:world
   end
 
   def self.help arr=[]
-    ["Ask the bot questions ending in ??"]
+    [
+      "Ask the bot questions ending in ??",
+      "Questions like: \"*: A or B or C??\" may actually get a proper answer eg",
+      "  \"Beerbot: should I do: A or B or C?? \"",
+    ]
   end
 
 end
