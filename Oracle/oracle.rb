@@ -85,9 +85,10 @@ module BeerBot::Modules::Oracle
 
     if (items=self.extract_or_items(msg)) && /:/===msg then
       items = items.map{|i| i.sub(/\?+$/,'').sub(/^([^:]*:)?/,'') }
+      # "should I|we|they do: A or B ..."
       return [to:replyto,msg:[
           "hmm, you should go with: #{items.sample}",
-          "do: #{items.sample}",
+          "you should do: #{items.sample}",
           "I think, at the moment, you should be going with: #{items.sample}",
           "You should do: #{items.sample}, #{from}",
           "#{items.sample} is the best option",
