@@ -53,39 +53,56 @@ module BeerBot::Modules::Sed
         who = $1
       end
 
-      #replies += [to:replyto,msg:"#{m.inspect}"]
       arr = self.data[who][replyto]
       if arr.size > 0 then
         begin
           rx = Regexp.new(m[:pattern])
         rescue => e
           return replies+=[to:replyto,msg:[
-              "Go back to regex school n00b -- #{e}"
+              "Go back to regex school n00b -- #{e}",
+              "No-can-do: #{e}",
+              "No you don't: #{e}",
+              "Fail. #{e}",
+              "Your pattern matching skills have a lot to be desired #{from} -- #{e}",
             ].sample]
         end
+
+        type,last = arr.last
+
         if flags && flags=~/g/ then
-          msg = arr.last.gsub(rx,m[:replacement])
+          msg = last.gsub(rx,m[:replacement])
         else
-          msg = arr.last.sub(rx,m[:replacement])
+          msg = last.sub(rx,m[:replacement])
         end
-        if msg == arr.last then
+        if msg == last then
           if [true,false,false].sample then
             replies += [to:replyto,msg:[
-                "Go back to regex school n00b",
                 "Your pattern matching skills have a lot to be desired #{from}",
-                "Seriously, what was the point of that, nothing changed."
+                "Seriously, what was the point of that, nothing changed.",
+                "Seriously, what was the point of that.",
+                "Why bother.",
               ].sample]
           end
         else
           if who!=from then
             replies += [
               to:replyto,
-              msg:"What #{from} thinks #{who} meant to say was: #{msg}"
+              msg: case type
+                   when :action
+                     "What #{from} thinks #{who} meant to do was: #{msg}"
+                   else
+                     "What #{from} thinks #{who} meant to say was: #{msg}"
+                   end
             ]
           else
             replies += [
               to:replyto,
-              msg:"What #{who} meant to say was: #{msg}"
+              msg: case type
+                   when :action
+                     "What #{who} meant to do was: #{msg}"
+                   else
+                     "What #{who} meant to say was: #{msg}"
+                   end
             ]
           end
         end
@@ -98,18 +115,32 @@ module BeerBot::Modules::Sed
             "I'm afraid I can't do that #{from}",
           ].sample]
       end
+
+    # Everything else is something we overhear and record...
+
     else
-      # Everything else is something we overhear and record...
       arr = self.data[from][replyto]
-      arr.push(msg)
+      arr.push([:msg,msg])
       if arr.size > self.size then
         arr.shift(arr.size-self.size)
       end
     end
+
     if replies.empty? then
       nil
     else
       replies
     end
+
   end
+
+  def self.action action,world:nil,from:nil,to:nil,me:false
+    replyto = me ? from : to
+    arr = self.data[from][replyto]
+    arr.push([:action,action])
+    if arr.size > self.size then
+      arr.shift(arr.size-self.size)
+    end
+  end
+
 end
