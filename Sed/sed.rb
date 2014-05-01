@@ -42,10 +42,17 @@ module BeerBot::Modules::Sed
     when m=Utils.sed_regex.match(msg)
       who = from
       flags = m[:flags]
+
+      # Ignore sed unless it is at the beginning of the line.
+      if m[:before] && m[:before] =~ /\S/ then
+        return nil
+      end
+
       case m[:after]
       when /^\s*(\S+)\s*$/
         who = $1
       end
+
       #replies += [to:replyto,msg:"#{m.inspect}"]
       arr = self.data[who][replyto]
       if arr.size > 0 then
