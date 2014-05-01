@@ -10,7 +10,9 @@ require 'BeerBot'
 module BeerBot; module Modules; end; end
 
 module BeerBot::Modules::Sed
+
   Utils = ::BeerBot::Utils
+
   def self.size size=nil
     if size.nil? then
       @size ||= 1
@@ -18,6 +20,7 @@ module BeerBot::Modules::Sed
       @size = size
     end
   end
+
   def self.data
     @data ||= Hash.new{|h,from|
       h[from] = Hash.new{|h,to|
