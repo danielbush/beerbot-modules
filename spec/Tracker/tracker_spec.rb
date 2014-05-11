@@ -1,4 +1,4 @@
-require_relative '../init.rb'
+require_relative '../../Tracker/init.rb'
 
 Tracker = BeerBot::Modules::Tracker
 describe "Tracker module" do

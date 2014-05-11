@@ -1,5 +1,5 @@
 
-require_relative '../facts.rb'
+require_relative '../../Facts/facts.rb'
 Facts = ::BeerBot::Modules::Facts
 
 # Mock out what we expect from ::FactsDb.

@@ -31,23 +31,26 @@ require 'sqlite3'
 # Facts will build an sqlite3 database called facts.db in this
 # directory.
 
+require 'beerbot'
+require_relative 'factsdb/factsdb'
+require_relative '../utils/param_expand'
+
 module BeerBot::Modules::Facts
 
-  require 'BeerBot'
-  require_relative 'factsdb/factsdb.rb'
-
-  Utils       = ::BeerBot::Utils
-  ParamExpand = ::BeerBot::Utils::ParamExpand
   BotMsg      = ::BeerBot::BotMsg
-  Config      = ::BeerBot::Config
+  Utils       = ::BeerBot::Modules::Utils
+  ParamExpand = ::BeerBot::Modules::Utils::ParamExpand
 
+  def self.config config
+    @config = config
+  end
 
   def self.dbfile filepath=nil
     if filepath then
       @filepath = filepath
       @db = nil
     else
-      @filepath ||= File.join(Config.module_data('Facts'),'facts.db')
+      @filepath ||= File.join(@config.module_data('Facts'),'facts.db')
     end
   end
 
@@ -62,7 +65,7 @@ module BeerBot::Modules::Facts
     @db
   end
 
-  def self.cmd msg,from:nil,to:nil,me:false,world:nil
+  def self.cmd msg,from:nil,to:nil,me:false,config:nil
 
     self.db.build_tables!
     replyto = me ? from : to
@@ -112,7 +115,7 @@ module BeerBot::Modules::Facts
     # If we see an interpolation and we were commanded eg
     # "Beerbot, say ,,hi"
     when /,,(\S+)(\s+\d+)?/
-      return self.hear msg,from:from,to:to,me:me,world:world
+      return self.hear msg,from:from,to:to,me:me,config:config
 
     # ",term swap m n"
     when /^(\S+)\s+swap\s+(\d+)\s+(\d+)\s*$/
@@ -273,7 +276,7 @@ module BeerBot::Modules::Facts
 
   end
 
-  def self.hear msg,from:nil,to:nil,me:false,world:nil
+  def self.hear msg,from:nil,to:nil,me:false,config:nil
     self.db.build_tables!
     case msg
     when /,,(\S+)(\s+\d+)/

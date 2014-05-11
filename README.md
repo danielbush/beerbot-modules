@@ -1,34 +1,115 @@
 # BeerBot modules.
 
-Some botmodules that can be used with beerbot.
+Greetings friend.  You have found your way to the beerbot botmodule project.
 
 BeerBot can be found at: https://github.com/danielbush/BeerBot .
+You'll need that if you want to go too much further into all matters beerbot.
+
 BeerBot can also be installed as a gem ```gem install beerbot```.
+Which might be a whole lot easier come to think of it.
 
-## How to use
+Once you've got beerbot, you'll be wanting to do something with him.
 
-* make a ```beerbot/``` directory somewhere
-* Clone or download this package
-  * put in ```beerbot/modules```
-* Configure beerbot's ```moduledir``` to point to ```beerbot/modules```
-* Configure beerbot's ```modules``` array to pick which modules you want to use; names should be proper-case and match one or more of the directories in ```beerbot/modules```.
-* You should also set up a datadir in ```beerbot/``` eg ```beerbot/data``` .
+That's where we come in...
+
+## Setting up BeerBot modules on a new BeerBot installation
+
+* set up BeerBot as per the README on https://github.com/danielbush/BeerBot
+* configure beerbot's ```moduledir``` to point to a clone of this project
+* configure beerbot's ```modules``` array to pick which modules you want to use; names should be proper-case and match one or more of the directories in ```moduledir``` - the directories in this project.
+* configure beerbot's ```datadir``` to point to an empty directory somewhere
   * and make sure the beerbot config is configured for this also
   * modules will store their data here ordinarily
 * run ```bundle install```
   * this should install the gems your bot modules will need
-  * it'll probably install beerbot as well at a specific version (see testing below)
-* Check that your modules work against the version of beerbot you're using; see Testing below
+  * it'll probably install beerbot as well at a specific version (see testing below); you can try to run this or run a version cloned from git
+* Check that your modules work against the version of beerbot you're using; beware, this is a fine art at the moment, as a lot has happened in beerbot land in recent times
+  * see Testing below
 
-Some further thoughts about your organising your particular flavour of BeerBot...
-* the ```master``` branch for this project contains the default modules
-* you can create your own branch and periodically pull ```master``` into it
-* remember, you don't have to use all the modules; set BeerBot's ```modules``` configuration to determine which modules you want to use
+Some further thoughts about organising your particular flavour of BeerBot...
+* the ```master-0.x``` branch points to the default installation that will most likely work with beerbot 0.x.y .  No guarantees... at the moment.
+* you can maybe branch off these and use a similar numbering scheme
 
 ## Creating a botmodule
 
 Well, checkout the existing ones :D
-We even included the Hodor module, which you should NOT use out there in the wild.
+
+We even included the Hodor module, which you should NOT use out there
+in the wild. See the TUTORIAL.
+
+## About some of the bot modules...
+
+So there will be at leat 2 modules in here.
+```Facts``` module and the other is the ```Oracle``` module.
+
+In your conf, you're gonna want something like this:
+- ```moduledir: 'path/to/beerbot/modules'```
+- ```modules: ['Oracle','Facts']```
+
+
+The ```Facts``` module is by far the more complicated of the two and
+provides a way for people to add one or more facts for a given term or
+keyword. At this point, maybe just look at the specs or use beerbot's
+```,help``` command to check this out.
+
+The ```Oracle``` module shows you how to use the ```JsonDataFile```.
+This nifty piece of kit should automatically reload itself everytime
+you update the json file, allowing you to keep beerbot hip and current
+without even missing a beat.
+
+Incidentally, you will see how ```datadir``` is accessed in the
+```Oracle``` module.  It uses ```BeerBot::Config#module_data```.
+
+There's also a ```Beer``` module that I haven't included here. In fact
+both the ```Facts``` module and the ```Beer``` module were somewhat
+inspired by functionality resident in #emac's fsbot on freenode.
+
+## Quick reference...
+
+So, your bot module is an object of some sort that should respond to
+any or all of the following methods:
+
+```
+  #cmd msg,from:f,to:t,me:false,config:c,
+```
+* commands issued to the bot
+* these are messages that the bot assumes are being
+  directed at it in particular
+
+```
+  #hear msg,from:f,to:t,config:c,me:false
+```
+* messages that the bot hears
+* the distinction with #cmd is determined by the dispatcher in the
+  beerbot code; the default dispatcher looks for a command prefix
+  at the beginning of a message eg ",do something!", to determine
+  whether #cmd or #hear is used.
+
+```
+  #event type,from:f,to:t,config:c,me:false
+```
+* type is a symbol representing a generic event type
+* eg :join => somebody joining a channel the bot is on
+
+```
+  #help arr
+```
+* where: topic,*subtopics = arr
+* see Facts module for an example
+
+```
+  #init config
+```
+* only called once, at startup
+* config is instance of BeerBot::Config
+
+```
+  #config config
+```
+* called at startup and possibly whenever
+  config is updated on the fly, not that we're
+  doing that atm...
+
 
 ## Testing
 
@@ -37,7 +118,7 @@ Your botmodules should probably use rspec.
 BeerBot modules may call:
 
 ```ruby
-  require 'BeerBot'
+  require 'beerbot'
 ```
 
 If the version of beerbot in the gemfile is ok, then hopefully you can do:
@@ -46,19 +127,19 @@ If the version of beerbot in the gemfile is ok, then hopefully you can do:
 ```
 ... replace Facts with whichever module you're testing.
 
-If the version of beerbot in the gem is no longer cutting it or if you're using a beerbot code, you'll need to do something like:
+If the version of beerbot in the gem is no longer cutting it then
+you'll need to use version checked out from github.
+
+In that case...
 ```
   rspec -Ipath/to/beerbot/lib Facts/spec
 ```
 
 ## Recommendations
 
-Try to make any database or datafile (eg JsonDataFile) you use injectable, rather than relying on BeerBot::Config.module_data .
-This isn't perfect.  There is no protocol around the beerbot code injecting a conf into a module (maybe there should), so what you end up doing is having the *default behaviour* using BeerBot::Config.module_data and allowing this to be overridden by passing in an **alternative** filepath or mock data object.  You can then do overrides when testing.  See Oracle and Facts module for examples.
+* Write your code without any reference to beerbot (if it's complicated).
+* Then hook it in using the event handlers in your beerbot module.
+* Inject stuff.  Most things in beerbot are injectable including
+  beerbot's configuration.  Your test-writing, rspec-loving alter-ego
+  will love you.
 
-If your module does something, write it without any reference to the beerbot module.  Make an API out of it or whatever.
-Then define your bot module to use that.
-This will allow you to inject in a mock implementation when testing.
-And it also means you can separate out the logic for routing and handling incoming commands from the logic of the service you're providing.
-
-In the case of the Facts module, I created a FactsDB and put that in a subdir and made it completely independent of the Facts module with its own spec directory.

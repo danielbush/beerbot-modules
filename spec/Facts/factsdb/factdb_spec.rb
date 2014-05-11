@@ -1,6 +1,6 @@
 require 'pp'
 require 'byebug'
-require_relative "../factsdb.rb"
+require_relative "../../../Facts/factsdb/factsdb.rb"
 
 dbfile = File.expand_path(File.dirname(__FILE__))+'/facts.db'
 File.unlink(dbfile) if File.exists?(dbfile)

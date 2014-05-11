@@ -5,13 +5,11 @@
 # enclosed with this project in the file LICENSE.  If not
 # see <http://www.gnu.org/licenses/>.
 
-require 'BeerBot'
+require 'beerbot'
 
 module BeerBot; module Modules; end; end
 
 module BeerBot::Modules::Tracker
-
-  Utils = ::BeerBot::Utils
 
   def self.data
     @data ||= Hash.new{|h,nick|
@@ -80,7 +78,7 @@ module BeerBot::Modules::Tracker
     nil
   end
 
-  def self.cmd msg,me:me,from:nil,to:nil,world:nil
+  def self.cmd msg,me:me,from:nil,to:nil,config:nil
     replyto = me ? from : to
     case msg
     when /^seen\s+(\S+)\s*$/
@@ -122,8 +120,7 @@ module BeerBot::Modules::Tracker
                   "Ask yourself",
                 ].sample
               ]
-            when 'beerbot' # TODO: get this from world, but in 0.2.x
-              # we'll get it from config passed to us
+            when config['nick']
               [
                 to:replyto,
                 msg:[

@@ -5,13 +5,14 @@
 # enclosed with this project in the file LICENSE.  If not
 # see <http://www.gnu.org/licenses/>.
 
-require 'BeerBot'
+require 'beerbot'
+require_relative '../utils/sed'
 
 module BeerBot; module Modules; end; end
 
 module BeerBot::Modules::Sed
 
-  Utils = ::BeerBot::Utils
+  Sed = ::BeerBot::Modules::Utils::Sed
 
   def self.size size=nil
     if size.nil? then
@@ -38,11 +39,11 @@ module BeerBot::Modules::Sed
     ]
   end
 
-  def self.hear msg,world:nil,from:nil,to:nil,me:false
+  def self.hear msg,config:nil,from:nil,to:nil,me:false
     replyto = me ? from : to
     replies = []
     case
-    when m=Utils.sed_regex.match(msg)
+    when m=Sed.sed_regex.match(msg)
       who = from
       flags = m[:flags]
 
@@ -137,7 +138,7 @@ module BeerBot::Modules::Sed
 
   end
 
-  def self.action action,world:nil,from:nil,to:nil,me:false
+  def self.action action,config:nil,from:nil,to:nil,me:false
     replyto = me ? from : to
     arr = self.data[from][replyto]
     arr.push([:action,action])

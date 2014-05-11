@@ -1,5 +1,5 @@
 
-require_relative '../dice.rb'
+require_relative '../../Dice/dice.rb'
 require 'pp'
 Dice = BeerBot::Modules::Dice
 

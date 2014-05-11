@@ -5,7 +5,7 @@
 # enclosed with this project in the file LICENSE.  If not
 # see <http://www.gnu.org/licenses/>.
 
-require 'BeerBot'
+require 'beerbot'
 
 module BeerBot; module Modules; end; end
 
@@ -29,7 +29,7 @@ module BeerBot::Modules::Dice
   #
   # Assumes: msg has "beerbot: " stripped out via the dispatcher.
 
-  def self.cmd msg,from:nil,to:nil,me:false,world:nil
+  def self.cmd msg,from:nil,to:nil,me:false,config:nil
     replyto = me ? from : to
     m=self.detect(msg)
     return nil unless m

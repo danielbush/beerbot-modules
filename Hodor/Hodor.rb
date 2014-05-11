@@ -1,4 +1,7 @@
-require 'BeerBot'
+require 'beerbot'
+
+module BeerBot; module Modules; end; end
+
 module BeerBot::Modules::Hodor
     # This is called when the bot is addressed directly...
     def self.cmd msg,**kargs

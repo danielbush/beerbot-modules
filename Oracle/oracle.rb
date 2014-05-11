@@ -5,7 +5,9 @@
 # enclosed with this project in the file LICENSE.  If not
 # see <http://www.gnu.org/licenses/>.
 
-require 'BeerBot'
+require 'beerbot'
+require_relative '../utils/datafile'
+require_relative '../utils/param_expand'
 
 module BeerBot; module Modules; end; end
 
@@ -16,11 +18,14 @@ module BeerBot; module Modules; end; end
 
 module BeerBot::Modules::Oracle
 
-  Config = ::BeerBot::Config
-  BotMsg = ::BeerBot::BotMsg
-  Utils  = ::BeerBot::Utils
+  BotMsg       = ::BeerBot::BotMsg
+  Utils        = ::BeerBot::Modules::Utils
   ParamExpand  = Utils::ParamExpand
   JsonDataFile = Utils::JsonDataFile
+
+  def self.config config
+    @config = config
+  end
 
   # Get or set the datafile.
   #
@@ -32,7 +37,7 @@ module BeerBot::Modules::Oracle
       @filepath = filepath
       @data = nil
     else
-      @filepath ||= File.join(Config.module_data('Oracle'),'data.json')
+      @filepath ||= File.join(@config.module_data('Oracle'),'data.json')
     end
   end
 
@@ -77,7 +82,7 @@ module BeerBot::Modules::Oracle
     return result
   end
 
-  def self.hear msg,to:nil,from:nil,me:false,world:nil
+  def self.hear msg,to:nil,from:nil,me:false,config:nil
     replyto = me ? from : to
     unless /\?{2,}\s*$/i === msg
       return nil
@@ -125,9 +130,8 @@ module BeerBot::Modules::Oracle
   #
   # Assumes: msg has "beerbot: " stripped out via the dispatcher.
 
-  def self.cmd msg,from:nil,to:nil,me:false,world:nil
-    
-      self.hear msg,from:from,to:to,world:world
+  def self.cmd msg,from:nil,to:nil,me:false,config:nil
+    self.hear msg,from:from,to:to,config:config
   end
 
   def self.help arr=[]
