@@ -110,6 +110,37 @@ any or all of the following methods:
   config is updated on the fly, not that we're
   doing that atm...
 
+### Return value
+
+Beerbot stores bot modules it uses in an array and tries each one
+in turn.
+
+If your module returns ```nil``` or ```false```, beerbot will move on
+to the next module. If you return a botmsg, this will be used to
+return a response.
+
+So, if you are processing ```#event```, be sure to return nil to
+allow other modules to likewise process ```#event``` (unless
+you don't want them to).
+
+If you returned true or something that isn't a botmsg but truthy, the
+bot won't say anything, but will stop processing any more modules.
+
+#### Array format responses
+
+You have another option.
+
+Return:
+```ruby
+  [true,thing]
+  # or
+  [false,thing]
+```
+where ```thing``` should be a botmsg.
+
+If ```true```, you suppress subsequent modules from being allowed to respond.
+If ```false```, your response in ```thing``` will be processed and beerbot
+will continue on to the next module.
 
 ## Testing
 
