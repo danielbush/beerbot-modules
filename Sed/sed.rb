@@ -93,7 +93,7 @@ module BeerBot::Modules::Sed
               to:replyto,
               msg: case type
                    when :action
-                     "What #{from} thinks #{who} meant to do was: #{msg}"
+                     "What #{from} thinks #{who} was implying was that who #{msg}"
                    else
                      "What #{from} thinks #{who} meant to say was: #{msg}"
                    end
