@@ -23,9 +23,14 @@ module BeerBot
       #
       # IMPORTANT: ensure when you use this that it takes an array.
       #
-      # h.more(:key) => returns the next 'size' things
-      # h[:key] => now has 'size'-less things in it
-      # h.more?(:key) => true if not self[key].empty?
+      # h = More.new(2)
+      # h[:key] = [1,2,3,4,5]
+      # h.more(:key) => [1,2]
+      # h.more?(:key) => true
+      # h[:key] => [3,4,5]
+      #
+      # MOTIVATION
+      # More-filter botmsg's using :to as the key.
 
       class More < Hash
         def initialize size=4
