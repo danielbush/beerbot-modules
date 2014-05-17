@@ -1,11 +1,4 @@
-# The files in this directory are part of BeerBot, a a ruby irc bot library.
-# Copyright (C) 2014 Daniel Bush
-# This program is distributed under the terms of the GNU
-# General Public License.  A copy of the license should be
-# enclosed with this project in the file LICENSE.  If not
-# see <http://www.gnu.org/licenses/>.
 
-require 'beerbot'
 
 module BeerBot
 
@@ -13,85 +6,57 @@ module BeerBot
 
     module Utils
 
-      # A hash that buffers things by some key.
-      #
-      # If 'things' exceeds a set number, then these are stored in an
-      # array against the key.
-      #
-      # For irc and other messaging the key should probably
-      # be key :to of one or more botmsg's.
-      # @see BotMsgMore
-
-      class More < Hash
-
-        attr_accessor :size
-
-        def initialize
-          super
-          # Default value is empty array.
-          self.default_proc = lambda {|h,k|
-            h[k] = []
-          }
-        end
-
-        def size
-          @size ||= 5  # lines
-        end
-
-        # Fetch array of items from buffer for key 'key'.
-        #
-        # 'key' should probably be a person or channel you are messaging.
-        #
-        # Should return an array of items (eg of botmsg hashes).
-
-        def more key
-          arr = self[key]
-          self[key] = arr.slice(self.size,arr.size) || []
-          return arr.slice(0,self.size-1)
-        end
-
-        # Filter an array of items allowing only
-        # the first 'n' of these.
-        #
-        # The remainder are stored in this hash and can
-        # be accessed via 'key' using 'self.more'.
-
-        def filter arr,key
-          if arr.size <= self.size then
-            self[key] = [] # reset buffer
-            return arr
-          end
-          self[key] = arr.slice(self.size,size)
-          return arr.slice(0,self.size)
-        end
-
+      # Split array in
+      def self.splitArray arr,n=1
+        [
+          arr[0..(n-1)] || [],
+          arr[n..-1] || []
+        ]
       end
 
-    end
+      # A hash of arrays.
+      #
+      # IMPORTANT: ensure when you use this that it takes an array.
+      #
+      # h.more(:key) => returns the next 'size' things
+      # h[:key] => now has 'size'-less things in it
+      # h.more?(:key) => true if not self[key].empty?
 
-    # More-based filter that can be applied to botmsg's.
-    #
-    # #filter expects a botmsg and returns an array, either of botmsg's
-    # or emtpy.
+      class More < Hash
+        def initialize size=4
+          super() {|h,k| h[k] = []}
+          @moresize = size
+        end
+        def size
+          @moresize
+        end
+        def size= n
+          @moresize = n
+        end
 
-    class BotMsgMore < ::BeerBot::Modules::Utils::More
-      def filter botmsg
-        arr = BeerBot::BotMsg.to_a(botmsg)
-        # At this point if arr isn't a valid bot msg we'll get [].
-        replies = []
-        by_to = Hash.new{|h,k| h[k]=[]}
+        # This should hopefully prevent most attempts at setting a
+        # non-array.
 
-        arr.inject(by_to){|h,v| h[v[:to]].push(v); h}
-        by_to.each_pair{|to,a|
-          replies += super(a,to)
-          if replies.size < a.size then
-            replies += [msg:"Type: more",to:to]
+        def []= k,v
+          unless v.kind_of?(Array) then
+            raise "More: Value not an array."
           end
-        }
-        return replies
+          super
+        end
+
+        def more? key
+          self[key].any?
+        end
+
+        def more key
+          return [] if self[key].empty?
+          a,b = Utils.splitArray(self[key],@moresize)
+          self[key] = b
+          a
+        end
+
       end
     end
 
   end
-
 end

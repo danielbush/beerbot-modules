@@ -4,19 +4,25 @@ require_relative "../../utils/more"
 More = ::BeerBot::Modules::Utils::More
 
 describe "More buffering" do
+
   it "should buffer" do
-    more = More.new
-    more.size.should == 5
-    more.size = 4
+    more = More.new(4)
+    more.size.should == 4
+    more.size = 2
+    more.size.should == 2
 
-    a = more.filter([1,2,3,4,5,6],:mine)
-    a.should == [1,2,3,4]
-    b = more.more(:mine)
-    b.should == [5,6]
+    more[:mine] = [1,2,3,4,5,6]
 
-    a = more.filter([1,2,3],:mine)
-    a.should == [1,2,3]
-    b = more.more(:mine)
-    b.should == []
+    more.more(:mine) == [1,2]
+    more.more(:mine).should == [3,4]
+    more.more(:mine).should == [5,6]
+    more.more(:mine).should == []
   end
+
+  it "should buffer even if set_more not called" do
+    more = More.new(2)
+    a = more.more(:random)
+    a.should == []
+  end
+
 end

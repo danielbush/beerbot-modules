@@ -34,12 +34,19 @@ require 'sqlite3'
 require 'beerbot'
 require_relative 'factsdb/factsdb'
 require_relative '../utils/param_expand'
+require_relative '../utils/more'
 
 module BeerBot::Modules::Facts
 
   BotMsg      = ::BeerBot::BotMsg
   Utils       = ::BeerBot::Modules::Utils
-  ParamExpand = ::BeerBot::Modules::Utils::ParamExpand
+  ParamExpand = Utils::ParamExpand
+  More        = Utils::More      
+
+  def self.init config
+    @config = config
+    @more = More.new(3)
+  end
 
   def self.config config
     @config = config
@@ -71,6 +78,15 @@ module BeerBot::Modules::Facts
     replyto = me ? from : to
 
     case msg
+
+    # ",more"
+    when /^more!*|moar!*/i
+      replies = @more.more(replyto)
+      return nil if replies.empty?
+      if @more.more?(replyto) then
+        replies += [to:replyto,msg:"type: #{config['cmd_prefix']}more"]
+      end
+      replies
 
     # ",term is also: ..."
     when /^(\S+)\s+is\s+also:\s*(.*)$/
@@ -236,7 +252,7 @@ module BeerBot::Modules::Facts
       term = $1
       n = $2
       n = n.to_i if n
-      return self.reply(term,n,to:replyto,from:from)
+      return self._reply(term,n,replyto,from)
 
     # ",term nomode|rand|reply"
     when /^(\S+)\s+(nomode|rand|reply)\s*$/
@@ -268,7 +284,7 @@ module BeerBot::Modules::Facts
       term = $1
       params = $2
       params = params.split(/\s+/)
-      self.reply(term,nil,to:to,from:from,params:params)
+      self._reply(term,nil,replyto,from,params:params)
 
     else
       return nil
@@ -283,13 +299,13 @@ module BeerBot::Modules::Facts
       term = $1
       n = $2
       n = n.to_i if n
-      return self.reply(term,n,to:to,from:from)
+      return self._reply(term,n,to,from)
     when /,,(\S+)\s(.*)$/
       term = $1
       params = $2
       params = params.split(/\s+/)
       #byebug
-      return self.reply(term,n,to:to,from:from,params:params)
+      return self._reply(term,n,to,from,params:params)
     end
   end
 
@@ -301,7 +317,7 @@ module BeerBot::Modules::Facts
   #
   # If term has a mode, we process it here.
 
-  def self.reply term,n=nil,to:nil,from:nil,params:nil
+  def self._reply term,n,to,from,params:nil
 
     nstr = n ? "[#{n}]" : ""
 
@@ -344,10 +360,16 @@ module BeerBot::Modules::Facts
                 val.map{|v| {msg:"[%d] %s" % [i+=1,v],to:to} }
       end
     else
-      #msg = [msg:"Don't know this term #{from}",to:to]
       return nil
     end
-    return msg
+
+    # Filter output.
+    @more[to] = msg
+    replies = @more.more(to)
+    if @more.more?(to) then
+      replies += [to:to,msg:"type: #{@config['cmd_prefix']}more"]
+    end
+    replies
   end
 
   def self.help arr=[]

@@ -1,6 +1,7 @@
 
 require_relative '../../Facts/facts.rb'
 Facts = ::BeerBot::Modules::Facts
+Facts.init({})
 
 # Mock out what we expect from ::FactsDb.
 #
