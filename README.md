@@ -12,6 +12,13 @@ Once you've got beerbot, you'll be wanting to do something with him.
 
 That's where we come in...
 
+## Version stuff...
+
+Before we get there, this is a note to say that the current version of beerbot
+these modules works with is 0.2.x .
+Specifically at the time I'm committing this sentence to git, it is 0.2.0.pre.1.
+So don't try using this particular version with 0.1.
+
 ## Setting up BeerBot modules on a new BeerBot installation
 
 * set up BeerBot as per the README on https://github.com/danielbush/BeerBot
