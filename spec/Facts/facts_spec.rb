@@ -56,7 +56,12 @@ describe "Facts module" do
     end
 
     it "should handle ',term n'"
-    it "should handle interpolation (,,)"
+
+    it "should handle interpolation (,,)" do
+      r = Facts.cmd('see ,,foo',from:'from',to:'to',me:true)
+      r[1][:msg].should == "[0] entry 1"
+      r[2][:msg].should == "[1] entry 2"
+    end
 
     it "should handle ',term is:'"
     it "should handle ',term is also:'"

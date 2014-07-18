@@ -128,10 +128,6 @@ module BeerBot::Modules::Facts
       end
       return [msg:msg,to:replyto]
 
-    # If we see an interpolation and we were commanded eg
-    # "Beerbot, say ,,hi"
-    when /,,(\S+)(\s+\d+)?/
-      return self.hear msg,from:from,to:to,me:me,config:config
 
     # ",term swap m n"
     when /^(\S+)\s+swap\s+(\d+)\s+(\d+)\s*$/
@@ -300,12 +296,14 @@ module BeerBot::Modules::Facts
       n = $2
       n = n.to_i if n
       return self._reply(term,n,to,from)
-    when /,,(\S+)\s(.*)$/
+    when /,,(\S+)\s+(\S.*)$/
       term = $1
       params = $2
       params = params.split(/\s+/)
-      #byebug
       return self._reply(term,n,to,from,params:params)
+    when /,,(\S+)/
+      term = $1
+      return self._reply(term,n,to,from,params:nil)
     end
   end
 
