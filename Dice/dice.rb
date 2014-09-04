@@ -16,13 +16,24 @@ module BeerBot; module Modules; end; end
 
 module BeerBot::Modules::Dice
 
-  REGEX = /^\s*(?<num>\d+)?d(?<dice>\d+)\b/
+  REGEX = /^\s*(?<num>\d+)?d(?<dice>\d+)(?<add>\+\d+)?\b/
 
   def self.detect str
     m = REGEX.match(str)
     if m then
-      [ m[:num].nil? ? 1 : m[:num].to_i,m[:dice].to_i]
+      [ m[:num].nil? ? 1 : m[:num].to_i,
+        m[:dice].to_i,
+        m[:add].nil? ? 0 : m[:add].to_i
+      ]
     end
+  end
+
+  def self.roll num, dice, add
+    result = num
+             .times
+             .inject([]) {|s,_| s << Kernel.rand(dice)+1 }
+    sum = result.reduce{|s,i|s+i} + add
+    [result, add, sum]
   end
 
   # Route messages like "beerbot: why ... " etc
@@ -33,7 +44,7 @@ module BeerBot::Modules::Dice
     replyto = me ? from : to
     m=self.detect(msg)
     return nil unless m
-    num,dice = m
+    num, dice, add = m
 
     if num == 0 then
       if dice == 0 then
@@ -68,10 +79,11 @@ module BeerBot::Modules::Dice
       return BeerBot::BotMsg.actionify(replies)
     end
 
-    result = num.times.inject([]) {|s,_| s << Kernel.rand(dice)+1 }.join(' ')
+    result, add, sum = self.roll(num, dice, add)
+    
     replies = [
       to:replyto,
-      msg:"* rolls the #{num==0 ? 'die' : 'dice'} ... #{result}"
+      msg:"* rolls the #{num==0 ? 'die' : 'dice'} ... #{result.join(' + ')}#{if add > 0 then " + " + add.to_s else "" end} = #{sum}"
     ]
     BeerBot::BotMsg.actionify(replies)
   end
