@@ -153,7 +153,9 @@ will continue on to the next module.
 
 Your botmodules should probably use rspec.
 
-BeerBot modules may call:
+Currently, all the tests live in spec/.
+
+Note that BeerBot modules may require beerbot itself:
 
 ```ruby
   require 'beerbot'
@@ -161,16 +163,17 @@ BeerBot modules may call:
 
 If the version of beerbot in the gemfile is ok, then hopefully you can do:
 ```
+  rspec
+```
+Or
+```
   rspec Facts/spec
 ```
 ... replace Facts with whichever module you're testing.
 
-If the version of beerbot in the gem is no longer cutting it then
-you'll need to use version checked out from github.
-
-In that case...
+If you want to run the tests against a specific beerbot codebase:
 ```
-  rspec -Ipath/to/beerbot/lib Facts/spec
+  rspec -Ipath/to/beerbot/lib
 ```
 
 ## Recommendations
