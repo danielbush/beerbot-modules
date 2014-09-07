@@ -31,6 +31,8 @@ module BeerBot::Modules::Reminder
       "    repeating reminder",
       "If you run this in a channel, the channel will own and get the reminder",
       "If you message the bot directly, you will own and get the reminder",
+      ",atrm <id>  =  deletes a job",
+      ",atls       =  lists jobs",
     ]
   end
 
