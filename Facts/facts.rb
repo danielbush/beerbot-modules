@@ -8,6 +8,11 @@
 module BeerBot; module Modules; end; end
 
 require 'sqlite3'
+require 'beerbot'
+require_relative 'factsdb/factsdb'
+require_relative '../utils/param_expand'
+require_relative '../utils/more'
+
 
 # Facts module.
 #
@@ -30,11 +35,6 @@ require 'sqlite3'
 #
 # Facts will build an sqlite3 database called facts.db in this
 # directory.
-
-require 'beerbot'
-require_relative 'factsdb/factsdb'
-require_relative '../utils/param_expand'
-require_relative '../utils/more'
 
 module BeerBot::Modules::Facts
 
