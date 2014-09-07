@@ -39,94 +39,106 @@ module BeerBot::Modules::Sed
     ]
   end
 
-  def self.hear msg,config:nil,from:nil,to:nil,me:false
+  def self.hear msg, config:nil, from:nil, to:nil, me:false
+
     replyto = me ? from : to
     replies = []
-    case
-    when m=Sed.sed_regex.match(msg)
-      who = from
-      flags = m[:flags]
 
-      # Ignore sed unless it is at the beginning of the line.
-      if m[:before] && m[:before] =~ /\S/ then
-        return nil
-      end
+    m = Sed.sed_regex.match(msg)
+    ignore = false
 
-      case m[:after]
-      when /^\s*(\S+)\s*$/
-        who = $1
-      end
-
-      arr = self.data[who][replyto]
-      if arr.size > 0 then
-        begin
-          rx = Regexp.new(m[:pattern])
-        rescue => e
-          return replies+=[to:replyto,msg:[
-              "Go back to regex school n00b -- #{e}",
-              "No-can-do: #{e}",
-              "No you don't: #{e}",
-              "Fail. #{e}",
-              "Your pattern matching skills have a lot to be desired #{from} -- #{e}",
-            ].sample]
-        end
-
-        type,last = arr.last
-
-        if flags && flags=~/g/ then
-          msg = last.gsub(rx,m[:replacement])
-        else
-          msg = last.sub(rx,m[:replacement])
-        end
-        if msg == last then
-          if [true,false,false].sample then
-            replies += [to:replyto,msg:[
-                "Your pattern matching skills have a lot to be desired #{from}",
-                "Seriously, what was the point of that, nothing changed.",
-                "Seriously, what was the point of that.",
-                "Why bother.",
-              ].sample]
-          end
-        else
-          if who!=from then
-            replies += [
-              to:replyto,
-              msg: case type
-                   when :action
-                     "What #{from} thinks #{who} was implying was that who #{msg}"
-                   else
-                     "What #{from} thinks #{who} meant to say was: #{msg}"
-                   end
-            ]
-          else
-            replies += [
-              to:replyto,
-              msg: case type
-                   when :action
-                     "What #{who} meant to do was: #{msg}"
-                   else
-                     "What #{who} meant to say was: #{msg}"
-                   end
-            ]
-          end
-        end
-      else
-        replies += [to:replyto,msg:[
-            # TODO: in the case some cheeky sod sets who=beerbot,
-            # we need to catch that here...
-            #"Not entirely sure #{who} said something #{from}",
-            "You srs?",
-            "I'm afraid I can't do that #{from}",
-          ].sample]
-      end
+    if !m then
+      ignore = true
+    elsif m[:before] && m[:before] =~ /\S/ then
+      # Ignore unless sed command is at the beginning of the line.
+      ignore = true
+    end
 
     # Everything else is something we overhear and record...
 
-    else
+    if ignore then
       arr = self.data[from][replyto]
-      arr.push([:msg,msg])
+      arr.push([:msg, msg])
       if arr.size > self.size then
-        arr.shift(arr.size-self.size)
+        arr.shift(arr.size - self.size)
+      end
+      return nil
+    end
+
+    # Now let's try to sub...
+
+    who = from
+    flags = m[:flags]
+
+    # Check if 'from' is subbing someone else:
+
+    case m[:after]
+    when /^\s*(\S+)\s*$/
+      who = $1
+    end
+
+    # Get history...
+
+    arr = self.data[who][replyto]
+    if arr.size == 0 then
+      replies += [to: replyto, msg: [
+                    "You srs?",
+                    "I'm afraid I can't do that #{from}",
+                  ].sample]
+      return replies
+    end
+    type, last = arr.last
+
+    # Is the regex sensible?
+
+    begin
+      rx = Regexp.new(m[:pattern])
+    rescue => e
+      return replies += [to: replyto, msg: [
+                         "Go back to regex school n00b -- #{e}",
+                         "No-can-do: #{e}",
+                         "No you don't: #{e}",
+                         "Fail. #{e}",
+                         "Your pattern matching skills have a lot to be desired #{from} -- #{e}",
+                       ].sample]
+    end
+
+    # Perform the substitution:
+
+    if flags && flags=~/g/ then
+      msg = last.gsub(rx, m[:replacement])
+    else
+      msg = last.sub(rx, m[:replacement])
+    end
+
+    if msg == last then
+      replies += [to: replyto, msg: [
+                    "Your pattern matching skills have a lot to be desired #{from}",
+                    "Seriously, what was the point of that, nothing changed.",
+                    "Seriously, what was the point of that.",
+                    "Why bother.",
+                  ].sample]
+    else
+      if who != from then
+        replies += [
+          to: replyto,
+          msg: case type
+               when :action
+                 "What #{from} thinks #{who} was implying was that #{who} #{msg}"
+               else
+                 "What #{from} thinks #{who} meant to say was: #{msg}"
+               end
+        ]
+      else
+        replies += [
+          to: replyto,
+          msg: case type
+               when :action
+                 "What #{who} meant to do was: #{msg}"
+               else
+                 "What #{who} meant to say was: #{msg}"
+               end
+        ]
       end
     end
 
