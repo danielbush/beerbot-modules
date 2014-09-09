@@ -91,6 +91,7 @@ module BeerBot::Modules::Dice
   def self.help arr=[]
     [
       ",2d6 = means roll 6 sided die twice etc",
+      ",2d6+2 = means roll 6 sided die twice and add 2",
     ]
   end
 
