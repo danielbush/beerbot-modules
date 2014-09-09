@@ -9,7 +9,7 @@ describe "Reminder module", :reminder => true do
   describe "parsing inputs from users" do
     it "should parse cron args" do
       Reminder.parse_args('at 1-3 17 4-11/2 * * foo')
-        .should == ['at', 'foo', [[1, 2, 3], [17], [4, 6, 8, 10], true, true]]
+        .should == ['at', 'foo', [[1, 2, 3], [17], [4, 6, 8, 10], true, true], "1-3 17 4-11/2 * *"]
     end
   end
 
@@ -130,8 +130,14 @@ describe "Reminder module", :reminder => true do
       Reminder.scheduler.reject!{true}
       Reminder.scheduler.push(job=Reminder::Job.new(1,1,2,3,4,5){[to: 'to1', msg: 'msg1']})
       job[:msg] = [to: 'to1', msg: 'msg1']
+      job[:reminder] = true
       Reminder.scheduler.push(job=Reminder::Job.new(2,true,7,8,9,10){[to: 'to2', msg: 'msg2']})
       job[:msg] = [to: 'to2', msg: 'msg2']
+      job[:reminder] = true
+
+      # A non-reminder job - shouldn't be saved...
+      Reminder.scheduler.push(job=Reminder::Job.new(3,true,7,8,9,10){[to: 'to3', msg: 'msg3']})
+      job[:msg] = [to: 'to3', msg: 'msg3']
     }
 
     it "can save the scheduler to a json file and reload it" do
@@ -140,6 +146,7 @@ describe "Reminder module", :reminder => true do
       Reminder.scheduler.reject!{true}
       expect(Reminder.scheduler.empty?).to be(true)
       jobs = Reminder.load
+      expect(Reminder.scheduler.size).to be(2)
       expect(Reminder.scheduler[0][:id]).to be(1)
       expect(Reminder.scheduler[0].run).to match_array([to: 'to1', msg: 'msg1'])
       expect(Reminder.scheduler[1][:id]).to be(2)

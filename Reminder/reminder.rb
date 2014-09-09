@@ -42,6 +42,10 @@ module BeerBot::Modules::Reminder
     @more = More.new(5)
     # Load what we saved last time:
     self.load
+    Kernel.at_exit {
+      puts "Reminder module: saving!"
+      self.save
+    }
   end
 
   def self.cmd msg, from:nil, to:nil, me:false, config:nil
@@ -66,13 +70,13 @@ module BeerBot::Modules::Reminder
         job[:reminder] &&
         job[:owner] == replyto
       }.map {|job|
-        {to: replyto, msg: "#{job[:id]} (#{job[:owner]}) #{job[:msg]}"}
+        {to: replyto, msg: "#{job[:id]}: (#{job[:owner]}) [#{job[:details]}] #{job[:msg]}"}
       }
       @more[replyto] = jobs
       @more.more(replyto)
 
     when 'at', 'cron'
-      msg, cronr_params = params
+      msg, cronr_params, orig = params
       msg = [to: replyto, msg: msg]
       job = Job.new(self.new_id, *cronr_params) {
         msg
@@ -82,6 +86,7 @@ module BeerBot::Modules::Reminder
       job[:owner] = replyto
       job[:once] = true if cmd == 'at'
       job[:msg] = msg  # so we can persist
+      job[:details] = "#{cmd} #{orig}"
       job[:reminder] = true
       @scheduler.push(job)
       self.save
@@ -104,8 +109,8 @@ module BeerBot::Modules::Reminder
 
     end
 
-  #rescue => e
-    #[to: replyto, msg: e.message]
+  rescue => e
+    [to: replyto, msg: e.message]
 
   end
 
@@ -121,7 +126,8 @@ module BeerBot::Modules::Reminder
 
   # Persist to a file store.
   def self.save
-    File.write(self.savepath, @scheduler.to_json)
+    jobs = @scheduler.select{|job| job[:reminder]}.to_json
+    File.write(self.savepath, jobs)
   end
 
   # Load from file store.
@@ -129,17 +135,19 @@ module BeerBot::Modules::Reminder
   def self.load
     jobs = JSON.load(File.read(self.savepath))
     puts "Loading reminders from #{self.savepath}, #{jobs.size} reminders found"
-    @scheduler.reject!{true}
+    @scheduler.reject!{|job| job[:reminder]}
     jobs.each {|j|
       # Eek... convert keys to syms again
       msg = j['msg'].map {|h| {to: h['to'], msg: h['msg']}}
       job = Job.new(j['id'], j['minute'], j['hour'], j['day'], j['month'], j['dow']) {
         msg
       }
-      job[:reminder] = true
+      # Ick, indifferent access :)
       job[:owner] = j['owner']
       job[:once] = j['once']
       job[:msg] = msg
+      job[:details] = j['details']
+      job[:reminder] = true
       @scheduler.push(job)
     }
     jobs
@@ -187,14 +195,14 @@ module BeerBot::Modules::Reminder
       min, hour, dom, month, dow, msg = args
       # This guarantees we got 5 cron params + message:
       if msg.nil? then
-        raise "Couldn't detect a message"
+        raise "Usage: minute hour day month dow <msg> (see man 5 crontab)"
       end
       # Parse remainder as cron parameters for use with CronR:
       # This could throw an error.
       params = [min, hour, dom, month, dow].map {|m|
         CUtils.parse_param(m)
       }
-      [cmd, msg, params]
+      [cmd, msg, params, [min, hour, dom, month, dow].join(' ')]
 
     end
   end
